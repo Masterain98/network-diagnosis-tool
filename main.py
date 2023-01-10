@@ -88,11 +88,14 @@ if __name__ == '__main__':
         log("=" * 20 + "\n" + "正在检查 " + targeting_hosts[hostname] + " 的网络连接情况")
         nslookup = Nslookup(dns_servers=local_dns)
         ip_result = nslookup.dns_lookup(hostname).answer[0]
-        log("IP 地址: " + ip_result)
+        log("期待 IP 地址: " + ip_result)
 
-        ping_process = subprocess.check_output("ping " + hostname)
         try:
+            ping_process = subprocess.check_output("ping " + hostname)
             ping_result = ping_process.decode("gbk")
+        except subprocess.CalledProcessError as e:
+            log(e.output.decode("gbk"), True)
+            ping_result = "Ping 命令错误"
         except UnicodeDecodeError:
             try:
                 ping_result = ping_process.decode("utf-8")
@@ -102,7 +105,7 @@ if __name__ == '__main__':
                 except UnicodeDecodeError:
                     ping_result = ping_process.decode("cp1252")
         log(ping_result, True)
-        
+
         print("正在进行 traceroute 测试，请耐心等待...")
         tracert_process = subprocess.check_output("tracert -d " + hostname)
         try:
