@@ -1,4 +1,5 @@
 import subprocess
+import re
 from time import gmtime, strftime
 
 import dns.exception
@@ -6,6 +7,8 @@ import dns.resolver
 import requests
 import speedtest
 from nslookup import Nslookup
+
+VERSION = "1.0.2"
 
 log_message = ""
 
@@ -22,7 +25,13 @@ dns_resolver = dns.resolver.Resolver()
 
 
 def get_local_ip():
-    return requests.get('https://myip.ipip.net/').text
+    ip_info = requests.get('https://myip.ipip.net/').text
+    try:
+        private_ip = re.search(r"((\.)(\d){2,3}( ))", ip_info).group()
+        ip_info = ip_info.replace(private_ip, ".* ")
+    except AttributeError:
+        pass
+    return ip_info
 
 
 def get_local_dns():
@@ -54,6 +63,7 @@ if __name__ == '__main__':
     print("正在诊断网络环境...")
     print("这可能需要至多10分钟，请耐心等待。")
     print("诊断程序可以在最小化的情况下运行，结束后将生成报告文件。\n")
+    log("网络诊断工具版本： " + VERSION)
     # 系统信息
     local_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     time_zone = strftime("%Z", gmtime())
@@ -79,7 +89,7 @@ if __name__ == '__main__':
     # 本地 IP
     try:
         local_ip = get_local_ip()
-        log(local_ip, False)
+        log("\n"+local_ip, False)
     except Exception as e:
         log("无法获取本地 IP 地址: " + str(e))
 
