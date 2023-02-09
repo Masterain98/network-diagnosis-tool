@@ -18,7 +18,8 @@ targeting_hosts = {
     "static.snapgenshin.com": "静态资源 - 2",
     "homa.snapgenshin.com": "胡桃数据库",
     "hut.ao": "胡桃工具箱 - 主页",
-    "snapgenshin.com": "Snap.Genshin - 主页",
+    "autopatchhk.yuanshen.com": "原神国际服更新资源",
+    "autopatchcn.yuanshen.com": "原神国服更新资源",
 }
 
 dns_resolver = dns.resolver.Resolver()
