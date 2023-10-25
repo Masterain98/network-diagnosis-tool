@@ -6,7 +6,7 @@ from nslookup import Nslookup
 import dns_utils
 import uuid
 import pyminizip
-import encrypt_util
+import encryption.encrypt_util
 import concurrent.futures
 from config import VERSION
 
@@ -130,7 +130,8 @@ if __name__ == '__main__':
     with open(f"{file_name}.txt", "w+", encoding='utf-8') as f:
         f.write(log_message)
     # Zip the log file with password with name of uuid.zip
-    pyminizip.compress(f"./{file_name}.txt", None, f"{file_name}.zip", encrypt_util.generate_password(uuid_str), 5)
+    pyminizip.compress(f"./{file_name}.txt", None, f"{file_name}.zip",
+                       encryption.encrypt_util.generate_password(uuid_str), 5)
 
     print("=" * 20 + "\n" + f"日志已保存至 {file_name}.txt")
     print(f"请上传 {file_name}.zip 压缩包至 GitHub 议题中")

@@ -1,0 +1,4 @@
+[submodule "encryption"]
+	path = encryption
+	url = https://github.com/Masterain98/private-submodules
+	branch = network-diagnosis-tool
