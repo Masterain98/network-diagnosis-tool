@@ -30,11 +30,11 @@ VSVersionInfo(
       StringTable(
         u'040904b0',
         [StringStruct(u'CompanyName', u'DGP-Studio'),
-        StringStruct(u'FileDescription', u'A network diagnostic tool for DGP-Studio Snap Hutao project'),
+        StringStruct(u'FileDescription', u'A network Diagnosis tool for DGP-Studio Snap Hutao project'),
         StringStruct(u'FileVersion', u'1.1.0.0'),
-        StringStruct(u'InternalName', u'Snap Hutao Network Diagnostic Tool'),
+        StringStruct(u'InternalName', u'Snap Hutao Network Diagnosis Tool'),
         StringStruct(u'LegalCopyright', u'Masterain Copyright © 2023'),
-        StringStruct(u'ProductName', u'SH-Network-Diagnostic-Tool.exe'),
+        StringStruct(u'ProductName', u'SH-Network-Diagnosis-Tool.exe'),
         StringStruct(u'ProductVersion', u'1.1.0.0')])
       ]),
     VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
