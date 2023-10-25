@@ -1,0 +1,6 @@
+VERSION = "1.1.0.0"
+COMPANY_NAME = "DGP-Studio"
+FILE_DESCRIPTION = "A network diagnostic tool for DGP-Studio Snap Hutao project"
+INTERNAL_NAME = "Snap Hutao Network Diagnostic Tool"
+COPYRIGHT = "Masterain"
+PRODUCT_NAME = "SH-Network-Diagnostic-Tool.exe"

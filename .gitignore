@@ -153,3 +153,4 @@ cython_debug/
 /logo/*
 package.bat
 sign.ps1
+encrypt_util.py
