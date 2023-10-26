@@ -1,0 +1,28 @@
+stages:
+  - sync
+
+Sync:
+  stage: sync
+  tags:
+    - hutao-server-linux
+  only:
+    - tags
+    - web
+  variables:
+    TAG: '$CI_COMMIT_TAG'
+  script:
+    - wget https://github.com/Masterain98/network-diagnosis-tool/releases/latest/download/SH-Network-Diagnosis.exe
+  artifacts:
+    paths:
+      - SH-Network-Diagnosis.exe
+    expire_in: never
+  release:
+    name: '$TAG'
+    tag_name: '$TAG'
+    ref: '$TAG'
+    description: 'Release $TAG by CI'
+    assets:
+      links:
+        - name: "SH-Network-Diagnosis.exe"
+          url: "https://$CI_SERVER_SHELL_SSH_HOST/$CI_PROJECT_PATH/-/jobs/$CI_JOB_ID/artifacts/raw/SH-Network-Diagnosis.exe?inline=false"
+          link_type: package
