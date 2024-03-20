@@ -1,5 +1,7 @@
+# coding = utf-8
 import os
 import subprocess
+import time
 from time import gmtime, strftime
 import requests
 from nslookup import Nslookup
@@ -14,8 +16,7 @@ from config import VERSION
 log_message = ""
 
 targeting_hosts = {
-    "hutao-metadata.snapgenshin.com": "Metadata",
-    "static.snapgenshin.com": "Static Resource",
+    "api.snapgenshin.com": "Generic API",
     "homa.snapgenshin.com": "Hutao API",
     "enka-api.hut.ao": "Enka API (Hutao)",
     "hut.ao": "Snap Hutao Home Page",
@@ -94,8 +95,15 @@ if __name__ == '__main__':
     print("诊断程序可以在最小化的情况下运行，结束后将生成报告文件。\n")
     log("网络诊断工具版本： " + VERSION)
     # 系统信息
-    local_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-    time_zone = strftime("%Z", gmtime())
+    local_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    time_zone = time.strftime("%Z", time.localtime())
+    try:
+        time_zone = time_zone.encode('latin-1').decode('UTF-8')
+    except UnicodeDecodeError:
+        try:
+            time_zone = time_zone.encode('latin-1').decode('gbk')
+        except UnicodeDecodeError:
+            time_zone = "解码时区信息失败，大概是中国用户吧"
     log("本地时间: " + local_time)
     log("本机时区: " + time_zone, True)
 
@@ -105,8 +113,8 @@ if __name__ == '__main__':
         log("本地 DNS: " + dns_server, True)
     log("")
 
-    remote_dns = dns_utils.get_remote_dns()
-    log("远程 DNS 判断: " + str(remote_dns), True)
+    # remote_dns = dns_utils.get_remote_dns()
+    # log("远程 DNS 判断: " + str(remote_dns), True)
 
     # 本地 IP
     try:
