@@ -1,3 +1,4 @@
+# coding = utf-8
 import dns.exception
 import dns.resolver
 import dns.message
