@@ -4,7 +4,7 @@ stages:
 Sync:
   stage: sync
   tags:
-    - hutao-server-linux
+    - us3
   only:
     - tags
     - web
