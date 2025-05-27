@@ -1,1 +1,1 @@
-pyinstaller -i ./assets/icon.ico --version-file file_version_info.txt  -F main.py
+pyinstaller -F main.py --exclude-module=pkg_resources -i ./assets/icon.ico --version-file file_version_info.txt
