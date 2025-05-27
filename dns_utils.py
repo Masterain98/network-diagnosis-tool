@@ -20,6 +20,9 @@ def get_remote_dns() -> dict:
         return requests.get(f"https://{random.randint(10000000, 99999999)}.check.dns.pub/isp").json()
     except requests.HTTPError:
         return {}
+    except Exception as err:
+        print("Remote DNS Error: " + str(err))
+        return {}
 
 
 def nslookup_checker(requested_hostname: str) -> dns.resolver.Answer | None:
