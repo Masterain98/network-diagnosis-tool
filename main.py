@@ -109,6 +109,8 @@ def is_loopback_exempt(package_name):
             ["CheckNetIsolation.exe", "LoopbackExempt", "-s"],
             capture_output=True, text=True, check=False
         )
+        # Log the subprocess output as a string into the overall output log.
+        log("Loopback query subprocess output: " + ps_result.stdout, True)
     except FileNotFoundError:
         # 系统中找不到 CheckNetIsolation 可执行文件
         raise RuntimeError("无法找到 CheckNetIsolation.exe，请确保在 Windows 环境下运行。")

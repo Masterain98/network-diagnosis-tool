@@ -1,5 +1,5 @@
 # coding = utf-8
-VERSION = "1.2.0.0"
+VERSION = "1.2.1.0"
 COMPANY_NAME = "DGP-Studio"
 FILE_DESCRIPTION = "A network Diagnosis tool for DGP-Studio Snap Hutao project"
 INTERNAL_NAME = "Snap Hutao Network Diagnosis Tool"
