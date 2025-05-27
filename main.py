@@ -2,7 +2,6 @@
 import os
 import subprocess
 import time
-from time import gmtime, strftime
 import requests
 from nslookup import Nslookup
 import dns_utils
@@ -18,13 +17,8 @@ log_message = ""
 targeting_hosts = {
     "api.snapgenshin.com": "Generic API",
     "homa.snapgenshin.com": "Hutao API",
-    "enka-api.hut.ao": "Enka API (Hutao)",
-    "hut.ao": "Snap Hutao Home Page",
-    "autopatchhk.yuanshen.com": "Genshin Impact Global Update Resource",
-    "autopatchcn.yuanshen.com": "Genshin Impact CN Update Resource",
-    "sdk-os-static.mihoyo.com": "Genshin Impact Global Update Resource SDK",
-    "jihulab.com": "Snap Hutao GitLab Repository",
-    "github.com": "GitHub Repository",
+    "cnb.cool": "CNB Cool",
+    "github.com": "GitHub Repository"
 }
 
 
@@ -49,44 +43,95 @@ def log(message, next_line: bool = False):
 
 def tracert_test(this_hostname: str):
     temp_log = ""
+    ping_result = ""
     temp_log += ("=" * 20 + "\n" + "正在检查 " + targeting_hosts[this_hostname] + " 的网络连接情况\n")
+    
     nslookup = Nslookup(dns_servers=local_dns)
-    ip_result = nslookup.dns_lookup(this_hostname).answer[0]
+    try:
+        ip_answer = nslookup.dns_lookup(this_hostname).answer[0]
+        ip_result = ip_answer
+    except Exception as e:
+        ip_result = f"DNS lookup failed: {e}"
+    temp_log += ("期待 IP 地址: " + str(ip_result) + "\n")
+    
     doh_result = dns_utils.doh_checker(this_hostname)
-    temp_log += ("期待 IP 地址: " + ip_result + "\n")
     temp_log += ("DoH 查询结果: " + str(doh_result) + "\n")
-
+    
     try:
         ping_process = subprocess.check_output("ping " + this_hostname)
-        ping_result = ping_process.decode("gbk")
-    except subprocess.CalledProcessError as e:
-        temp_log += (e.output.decode("gbk") + "\n")
-        ping_result = "Ping 命令错误"
-    except UnicodeDecodeError:
-        possible_encoding = ["utf-8", "gb2312", "cp1252"]
-        for encoding in possible_encoding:
-            try:
-                ping_result = ping_process.decode(encoding)
-            except UnicodeDecodeError:
-                pass
-            else:
-                break
-    temp_log += (str(ping_result) + "\n")
-
-    print(f"Starting traceroute test for {this_hostname}...")
-    tracert_process = subprocess.check_output("tracert -d -w 800 " + this_hostname)
-    try:
-        tracert_result = tracert_process.decode("gbk")
-    except UnicodeDecodeError:
         try:
-            tracert_result = tracert_process.decode("utf-8")
+            ping_result = ping_process.decode("gbk")
+        except UnicodeDecodeError:
+            possible_encoding = ["utf-8", "gb2312", "cp1252"]
+            for encoding in possible_encoding:
+                try:
+                    ping_result = ping_process.decode(encoding)
+                except UnicodeDecodeError:
+                    continue
+                else:
+                    break
+    except subprocess.CalledProcessError as e:
+        temp_log += (e.output.decode("gbk", errors="ignore") + "\n")
+        ping_result = "Ping 命令错误"
+    temp_log += (str(ping_result) + "\n")
+    
+    print(f"Starting traceroute test for {this_hostname}...")
+    try:
+        tracert_process = subprocess.check_output("tracert -d -w 800 " + this_hostname)
+        try:
+            tracert_result = tracert_process.decode("gbk")
         except UnicodeDecodeError:
             try:
-                tracert_result = tracert_process.decode("gb2312", "ignore")
+                tracert_result = tracert_process.decode("utf-8")
             except UnicodeDecodeError:
-                tracert_result = tracert_process.decode("cp1252", "ignore")
+                try:
+                    tracert_result = tracert_process.decode("gb2312", "ignore")
+                except UnicodeDecodeError:
+                    tracert_result = tracert_process.decode("cp1252", "ignore")
+    except subprocess.CalledProcessError as e:
+        tracert_result = "Tracert error: " + e.output.decode("gbk", errors="ignore")
+    except Exception as ex:
+        tracert_result = "Tracert exception: " + str(ex)
+    
     temp_log += (tracert_result + "\n")
     return this_hostname, temp_log
+
+
+def is_loopback_exempt(package_name):
+    """
+    检查给定的UWP应用包名（Package Family Name）是否已经解除本地回环访问限制。
+    返回 True 表示已解除（应用在回环免除列表中），False 表示未解除。
+    若检测过程中出现错误（如权限不足或命令不可用），则抛出异常。
+    """
+    try:
+        # 调用 CheckNetIsolation 列出所有已免除回环限制的应用
+        ps_result = subprocess.run(
+            ["CheckNetIsolation.exe", "LoopbackExempt", "-s"],
+            capture_output=True, text=True, check=False
+        )
+    except FileNotFoundError:
+        # 系统中找不到 CheckNetIsolation 可执行文件
+        raise RuntimeError("无法找到 CheckNetIsolation.exe，请确保在 Windows 环境下运行。")
+
+    output = ps_result.stdout
+    if ps_result.returncode != 0:
+        # 返回码非0表示可能有错误，例如权限不足
+        error_msg = ps_result.stderr if ps_result.stderr else output
+        if "Access is denied" in error_msg or "requires elevation" in error_msg:
+            raise PermissionError("检查操作需要管理员权限，请以管理员身份运行。")
+        else:
+            raise RuntimeError(f"执行 CheckNetIsolation 时出现错误: {error_msg.strip()}")
+
+    # CheckNetIsolation -s 输出每个豁免的应用包含“Name:”一行以及对应的SID一行
+    is_exempt = False
+    for line in output.splitlines():
+        line_stripped = line.strip().lower()
+        if line_stripped.startswith("name:"):
+            app_name = line_stripped.split(":", 1)[1].strip()
+            if package_name.lower() in app_name:
+                is_exempt = True
+                break
+    return is_exempt
 
 
 if __name__ == '__main__':
@@ -122,6 +167,17 @@ if __name__ == '__main__':
         log("\n" + local_ip, False)
     except Exception as e:
         log("无法获取本地 IP 地址: " + str(e))
+
+    # 检查 UWP 应用是否解除本地回环限制
+    package = "60568DGPStudio.SnapHutao_wbnnev551gwxy"
+    try:
+        result = is_loopback_exempt(package)
+        if result:
+            print(f"{package} 的本地回环限制 **已解除**。")
+        else:
+            print(f"{package} 没有解除本地回环限制或未安装。")
+    except Exception as e:
+        print(f"检查过程中发生错误: {e}")
 
     # 网络检查
     pool_size = os.cpu_count()
