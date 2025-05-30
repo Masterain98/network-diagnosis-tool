@@ -10,6 +10,7 @@ import pyminizip
 import encryption.encrypt_util
 import concurrent.futures
 from config import VERSION
+import sys
 
 
 log_message = ""
@@ -35,10 +36,19 @@ def log(message, next_line: bool = False):
     message = str(message)
     if next_line:
         log_message += message + "\n"
-        print(message + "\n")
     else:
         log_message += message
-        print(message)
+    try:
+        if next_line:
+            print(message + "\n")
+        else:
+            print(message)
+    except UnicodeEncodeError:
+        safe_message = message.encode(sys.stdout.encoding, errors="replace").decode(sys.stdout.encoding)
+        if next_line:
+            print(safe_message + "\n")
+        else:
+            print(safe_message)
 
 
 def tracert_test(this_hostname: str):
@@ -144,13 +154,6 @@ if __name__ == '__main__':
     # 系统信息
     local_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     time_zone = time.strftime("%Z", time.localtime())
-    try:
-        time_zone = time_zone.encode('latin-1').decode('UTF-8')
-    except UnicodeDecodeError:
-        try:
-            time_zone = time_zone.encode('latin-1').decode('gbk')
-        except UnicodeDecodeError:
-            time_zone = "解码时区信息失败，大概是中国用户吧"
     log("本地时间: " + local_time)
     log("本机时区: " + time_zone, True)
 
