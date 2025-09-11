@@ -41,7 +41,9 @@ targeting_hosts = {
     "api.snapgenshin.com": "Generic API",
     "homa.snapgenshin.com": "Hutao API",
     "cnb.cool": "CNB Cool",
-    "github.com": "GitHub Repository"
+    "github.com": "GitHub Repository",
+    "static-archive.snapgenshin.com": "Static Archive (Global CDN)",
+    "static-archive.snapgenshin.cn": "Static Archive (CN CDN)"
 }
 
 
