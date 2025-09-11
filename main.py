@@ -10,11 +10,33 @@ import pyminizip
 import encryption.encrypt_util
 import concurrent.futures
 from config import VERSION
-import sys
+import sys, io, os
 
 
+def _setup_stdio_utf8():
+    # Force UTF-8 encoding for stdout and stderr
+    for name in ("stdout", "stderr"):
+        s = getattr(sys, name, None)
+        if not s:
+            continue
+        try:
+            s.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            if hasattr(s, "buffer"):
+                setattr(sys, name, io.TextIOWrapper(s.buffer, encoding="utf-8", errors="replace"))
+
+    if os.name == "nt" and getattr(sys.stdout, "isatty", lambda: False)():
+        try:
+            import ctypes
+            ctypes.windll.kernel32.SetConsoleOutputCP(65001)
+            ctypes.windll.kernel32.SetConsoleCP(65001)
+        except Exception:
+            pass
+    print(f"[Debug] sys.stdout encoding: {getattr(sys.stdout, 'encoding', None)}")
+    print(f"[Debug] sys.stderr encoding: {getattr(sys.stderr, 'encoding', None)}")
+
+_setup_stdio_utf8()
 log_message = ""
-
 targeting_hosts = {
     "api.snapgenshin.com": "Generic API",
     "homa.snapgenshin.com": "Hutao API",
@@ -68,18 +90,7 @@ def tracert_test(this_hostname: str):
     temp_log += ("DoH 查询结果: " + str(doh_result) + "\n")
     
     try:
-        ping_process = subprocess.check_output("ping " + this_hostname)
-        try:
-            ping_result = ping_process.decode("gbk")
-        except UnicodeDecodeError:
-            possible_encoding = ["utf-8", "gb2312", "cp1252"]
-            for encoding in possible_encoding:
-                try:
-                    ping_result = ping_process.decode(encoding)
-                except UnicodeDecodeError:
-                    continue
-                else:
-                    break
+        ping_result = subprocess.check_output(["ping", this_hostname], encoding="gbk", errors="replace")
     except subprocess.CalledProcessError as e:
         temp_log += (e.output.decode("gbk", errors="ignore") + "\n")
         ping_result = "Ping 命令错误"
@@ -87,17 +98,8 @@ def tracert_test(this_hostname: str):
     
     print(f"Starting traceroute test for {this_hostname}...")
     try:
-        tracert_process = subprocess.check_output("tracert -d -w 800 " + this_hostname)
-        try:
-            tracert_result = tracert_process.decode("gbk")
-        except UnicodeDecodeError:
-            try:
-                tracert_result = tracert_process.decode("utf-8")
-            except UnicodeDecodeError:
-                try:
-                    tracert_result = tracert_process.decode("gb2312", "ignore")
-                except UnicodeDecodeError:
-                    tracert_result = tracert_process.decode("cp1252", "ignore")
+        tracert_result = subprocess.check_output(["tracert", "-d", "-w", "800", this_hostname], encoding="gbk",
+                                                 errors="replace")
     except subprocess.CalledProcessError as e:
         tracert_result = "Tracert error: " + e.output.decode("gbk", errors="ignore")
     except Exception as ex:
@@ -117,10 +119,11 @@ def is_loopback_exempt(package_name):
         # 调用 CheckNetIsolation 列出所有已免除回环限制的应用
         ps_result = subprocess.run(
             ["CheckNetIsolation.exe", "LoopbackExempt", "-s"],
-            capture_output=True, text=True, check=False
+            capture_output=True, text=True, check=False,
+            encoding="utf-8", errors="replace"
         )
         # Log the subprocess output as a string into the overall output log.
-        log("Loopback query subprocess output: " + ps_result.stdout, True)
+        log("Loopback query subprocess output: " + (ps_result.stdout or ""), True)
     except FileNotFoundError:
         # 系统中找不到 CheckNetIsolation 可执行文件
         raise RuntimeError("无法找到 CheckNetIsolation.exe，请确保在 Windows 环境下运行。")
